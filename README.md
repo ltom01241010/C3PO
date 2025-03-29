@@ -43,10 +43,3 @@ bash download.sh
 python olmoe_optimizer.py
 ```
 
-## Demo Overview
-
-The demo will:
-1. Load the OLMoE model and tokenizer
-2. Analyze routing information from a sample text
-3. Optimize routing weights for arc-c questions using reference cases
-4. Evaluate the impact of the optimization on model performance
