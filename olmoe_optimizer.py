@@ -559,5 +559,4 @@ if __name__ == "__main__":
     print("OLMoE Routing Weight Optimizer Demo")
     print("===================================")
     print("This demo shows how to optimize the routing weights of OLMoE models")
-    
     main()
