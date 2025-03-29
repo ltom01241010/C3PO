@@ -19,8 +19,8 @@ pip install torch numpy transformers fvcore tqdm
 
 ### 2. Download Reference Cases
 
-Download the reference cases from this anonymous google drive link:
-[Reference Cases (Google Drive)](https://drive.google.com/file/d/1hw3nW7b8hG0KkL0C3kDUZ8Pkk2ywzv-f/view?usp=sharing)
+Download the reference cases from this anonymous link:
+[Reference Cases](https://drive.google.com/file/d/1hw3nW7b8hG0KkL0C3kDUZ8Pkk2ywzv-f/view?usp=sharing)
 
 ```bash
 # Extract the downloaded reference.zip
