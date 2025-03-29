@@ -1,6 +1,6 @@
 # OLMoE Routing Weight Optimizer
 
-This repository demonstrates how to optimize routing weights in OLMoE models to improve performance on multiple-choice questions.
+This repository demonstrates how C3PO optimizing expert pathways to improve the performance.
 
 ## Setup and Installation
 
