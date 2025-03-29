@@ -7,28 +7,12 @@ from sentence_transformers import SentenceTransformer, util
 from fvcore.nn import FlopCountAnalysis, flop_count_table
 from collections import Counter
 from tqdm import tqdm
-
-# =========================
-# Monkey-Patch OlmoeSparseMoeBlock.forward method to support custom routing weights
-# =========================
-
 try:
     from transformers.models.olmoe.modeling_olmoe import OlmoeSparseMoeBlock
 except ImportError:
     raise ImportError("Could not import OlmoeSparseMoeBlock, please check your transformers version.")
 
 def custom_moe_forward(self, hidden_states: torch.Tensor):
-    """
-    Custom forward method for MoE module.
-    After computing routing weights, if the module attribute self.custom_routing_weights is set,
-    it replaces the routing weights of the last token of each sample with the custom probability distribution.
-    
-    Args:
-        hidden_states: Input tensor of shape [batch_size, sequence_length, hidden_dim]
-        
-    Returns:
-        Tensor of shape [batch_size, sequence_length, hidden_dim] and router logits
-    """
     batch_size, sequence_length, hidden_dim = hidden_states.shape
     hidden_states_flat = hidden_states.view(-1, hidden_dim)
     router_logits = self.gate(hidden_states_flat)
@@ -64,22 +48,7 @@ def custom_moe_forward(self, hidden_states: torch.Tensor):
 # Apply the monkey patch
 OlmoeSparseMoeBlock.forward = custom_moe_forward
 
-# =========================
-# Helper Functions
-# =========================
-
 def extract_answer_option(text):
-    """
-    Extract the option letter (e.g., "A", "B", "C", "D") from the text.
-    First tries to find an option after "Answer:", if not found, looks for the first occurrence
-    of an option letter in the text. Returns an empty string if extraction fails.
-    
-    Args:
-        text: The text to extract the answer option from
-        
-    Returns:
-        A string containing the option letter, or an empty string if not found
-    """
     idx = text.find("Answer:")
     if idx != -1:
         substring = text[idx+len("Answer:"):].strip()
@@ -103,21 +72,6 @@ def extract_answer_option(text):
     return ""
 
 def extract_routing_info(text, model, tokenizer, batch_size=512, max_length=64):
-    """
-    Extract routing information for each token based on the input text.
-    Only extracts routing information for the last token and stores it in the last_token_routing field,
-    while also generating output text (max_length set to 64).
-    
-    Args:
-        text: The input text
-        model: The OLMoE model
-        tokenizer: The tokenizer for the model
-        batch_size: Maximum batch size for processing tokens
-        max_length: Maximum length for generating text
-        
-    Returns:
-        A dictionary containing routing information and generated text
-    """
     tokens = tokenizer(text, truncation=False)["input_ids"]
     expert_counter = Counter()
     last_token_routing = None
@@ -202,15 +156,6 @@ def print_analysis_results(results):
     print(results['generated_text'])
 
 def load_multiple_reference_files(file_paths):
-    """
-    Load multiple reference dataset files and merge them into a single reference set.
-    
-    Args:
-        file_paths: List of file paths to load
-        
-    Returns:
-        A dictionary containing the combined reference cases
-    """
     combined_references = {}
     for file_path in file_paths:
         try:
@@ -226,15 +171,6 @@ def load_multiple_reference_files(file_paths):
     return combined_references
 
 def detect_custom_routing_usage(model):
-    """
-    Check if custom routing weights are being used in any decoder layer of the model.
-    
-    Args:
-        model: The OLMoE model
-        
-    Returns:
-        True if custom routing weights are being used, False otherwise
-    """
     used = False
     for layer in model.model.layers:
         if hasattr(layer.mlp, 'custom_routing_weights') and layer.mlp.custom_routing_weights is not None:
@@ -247,22 +183,6 @@ def detect_custom_routing_usage(model):
     return used
 
 def re_infer_case(case, reference_cases, embedder, model, tokenizer, max_length=64):
-    """
-    Re-infer a case by updating routing weights (optimizing only the last five layers),
-    generating new text, and outputting information about the question, original inference answer,
-    correct answer, neighboring cases, and optimized inference results.
-    
-    Args:
-        case: The case to re-infer
-        reference_cases: Dictionary of reference cases
-        embedder: The sentence embedder to use for finding similar cases
-        model: The OLMoE model
-        tokenizer: The tokenizer for the model
-        max_length: Maximum length for generating text
-        
-    Returns:
-        A dictionary containing the re-inference results
-    """
     result = {}
     question = case.get("input_text", "")
     result["question"] = question
@@ -303,9 +223,6 @@ def re_infer_case(case, reference_cases, embedder, model, tokenizer, max_length=
         print(f"  Neighbor case {similar_key}: Similarity {score:.4f}, Question: {similar_question}  Correct answer: {neighbor_correct}")
     result["neighbors"] = neighbors
 
-    # -----------------------------
-    # Modified part: Optimize only the last five layers' routing weights
-    # -----------------------------
     routing_info = case.get("last_token_routing", None)
     if routing_info is None:
         print("Current case has no last_token_routing, skipping.")
@@ -412,14 +329,7 @@ def re_infer_case(case, reference_cases, embedder, model, tokenizer, max_length=
 
     return result
 
-# =========================
-# Main Program
-# =========================
-
 def main():
-    """
-    Main function to run the demo.
-    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_name = "allenai/OLMoE-1B-7B-0125-Instruct"
     print(f"Loading model {model_name}...")
