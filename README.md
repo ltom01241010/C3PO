@@ -1,6 +1,6 @@
 # OLMoE Routing Weight Optimizer
 
-This repository demonstrates how C3PO optimizing expert pathways to improve the performance.
+This repository demonstrates how C3PO optimizing expert pathways to improve the model performance.
 
 ## Setup and Installation
 
@@ -42,4 +42,3 @@ bash download.sh
 # Run the main script
 python olmoe_optimizer.py
 ```
-
