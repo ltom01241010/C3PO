@@ -13,6 +13,9 @@ Create a new conda environment named C3PO and install the required packages:
 conda create -n C3PO python=3.10 -y
 conda activate C3PO
 
+# Install PyTorch (for CUDA 12.3)
+conda install pytorch torchvision torchaudio pytorch-cuda=12.3 -c pytorch -c nvidia -y
+
 # Install required packages
 pip install torch numpy transformers fvcore tqdm
 ```
